@@ -1,9 +1,9 @@
 ﻿// 
 // Altasoft Navigation Plugin - ajax based navigation for better UX and low traffic load
 // 
-// V1.0
+// V1.1
 
-(function () {
+$(function () {
 
     var popupWaitingShowDelay = 500; //ms
     var popupLongWaitingShowDelay = 1500; //ms
@@ -56,12 +56,6 @@
                         showWaitingPopup();
                     }
                 }, popupWaitingShowDelay);
-
-                setTimeout(function () {
-                    if (!ajaxFinished)
-                        setPopupText(longWaitingText);
-                }, popupLongWaitingShowDelay);
-
             },
             success: function (data) {
                 $popup.hide();
@@ -82,12 +76,10 @@
     }
 
     function successDownloadPage(data) {
-        setTimeout(function () {
-            $(document).scrollTop(0);
-            $(MainContentSelector).empty();
-            $(MainContentSelector).append(data);
-            $(MainContentSelector).fadeTo('fast', 1);
-        }, 200);
+        $(document).scrollTop(0);
+        $(MainContentSelector).empty();
+        $(MainContentSelector).append(data);
+        $(MainContentSelector).fadeTo('fast', 1);
     }
 
 
@@ -98,7 +90,7 @@
     $(document).on('click', 'a', function () {
         var url = $(this).attr('href');
 
-        if (url.indexOf('/') == 0) {
+        if (url && url.indexOf('/') == 0) {
             navigate(url, false);
 
             return false;
@@ -114,14 +106,14 @@
             right: 0,
             bottom: 0,
             left: 0,
-            background: "rgba(255,255,255,0.8)",
+            background: "rgba(247, 247, 247, 0.8)",
             zIndex: 10000,
             opacity: 0,
             display: 'none'
             //"pointer-events": "none"
         });
 
-        var loaderImg = $('<img src="/Scripts/loader.gif" alt="" />').css({
+        var loaderImg = $('<img src="/Content/Img/loader.gif" alt="" />').css({
             position: 'absolute',
             left: '50%',
             top: '50%'
@@ -148,5 +140,10 @@
 
     };
 
+    $.altasoft = {
+        showWaiting: showWaitingPopup,
+        hideWaiting: hideWaitingPopup
+    };
+
     return navigate;
-})();
+});
