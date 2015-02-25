@@ -1,6 +1,7 @@
-// 
+﻿// 
 // Altasoft Navigation Plugin - ajax based navigation for better UX and low traffic load
 // 
+// V1.0
 
 (function () {
 
