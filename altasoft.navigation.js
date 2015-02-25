@@ -6,138 +6,137 @@
 
     var popupWaitingShowDelay = 500; //ms
     var popupLongWaitingShowDelay = 1500; //ms
-    var waitingText = "Please wait...";
-    var longWaitingText = "It took longer than expexted";
 
     var MainContentSelector = '#MainContent';
 
     var $popup = createWaitingPopup();
-    $(MainContentSelector).after($popup);
+    $('body').append($popup);
 
-	var navigate = function (url, skipAnimation, fadeSelector) {
 
-		$(document).trigger('navigating');
+    var navigate = function (url, skipAnimation, fadeSelector) {
 
-		try {
-		    hideContent();		    
-		}
-		catch (err) { }
+        $(document).trigger('navigating');
 
-		try {
-			history.pushState(url, document.title, url);
-			loadPage(url, skipAnimation, fadeSelector);
-		}
-		catch (err) {
-			window.location.assign(url);
-		}
-	}
+        try {
+            hideContent();
+        }
+        catch (err) { }
 
-	function loadPage(url, skipAnimation, fadeSelector) {
-		if (!url) return;		
+        try {
+            history.pushState(url, document.title, url);
+            loadPage(url, skipAnimation, fadeSelector);
+        }
+        catch (err) {
+            alert(err)
+            window.location.assign(url);
+        }
+    }
 
-		if (!fadeSelector)
-			fadeSelector = MainContentSelector;
+    function loadPage(url, skipAnimation, fadeSelector) {
+        if (!url) return;
 
-		if (!skipAnimation)
-	        $(fadeSelector).fadeTo('fast', 0);
+        if (!fadeSelector)
+            fadeSelector = MainContentSelector;
 
-		var ajaxFinished = false;
+        if (!skipAnimation)
+            $(fadeSelector).fadeTo('fast', 0);
 
-		$.ajax({
-			url: url,
-			type: "GET",
-			headers: {
-				"pageonly": true
-			},
-			beforeSend: function () {			    
-			    setTimeout(function () {
-			        if (!ajaxFinished) {
-			            showWaitingPopup();
-			        }
-			    }, popupWaitingShowDelay);
+        var ajaxFinished = false;
 
-			    setTimeout(function () {
-			        if (!ajaxFinished)
-			            setPopupText(longWaitingText);
-			    }, popupLongWaitingShowDelay);
-			    
-			},
-			success: function (data) {
-			    ajaxFinished = true;
-			    $(MainContentSelector).fadeTo('fast', 0, function () {			        
-			        successDownloadPage(data);
+        $.ajax({
+            url: url,
+            type: "GET",
+            headers: {
+                "pageonly": true
+            },
+            beforeSend: function () {
+                setTimeout(function () {
+                    if (!ajaxFinished) {
+                        showWaitingPopup();
+                    }
+                }, popupWaitingShowDelay);
 
-			        hideWaitingPopup();
-			    });
-			},            
-			error: function (err) {
-			    ajaxFinished = true;
-				console.log('Fallback, error while loading page', err);
-				window.location.assign(url);
-			}
-		});
-	}
+                setTimeout(function () {
+                    if (!ajaxFinished)
+                        setPopupText(longWaitingText);
+                }, popupLongWaitingShowDelay);
 
-	function successDownloadPage(data) {	    
-	    setTimeout(function () {	        
-	        $(document).scrollTop(0);	        
-	        $(MainContentSelector).empty();
-	        $(MainContentSelector).append(data);
-	        $(MainContentSelector).fadeTo('fast', 1);
-		}, 200);
-	}
+            },
+            success: function (data) {
+                $popup.hide();
+                ajaxFinished = true;
+                $(MainContentSelector).fadeTo('fast', 0, function () {
+                    successDownloadPage(data);
 
-    
-	onpopstate = function (event) {
-		loadPage(event.state);
-	}
+                    hideWaitingPopup();
+                });
+            },
+            error: function (err) {
+                $popup.hide();
+                ajaxFinished = true;
+                console.log('Fallback, error while loading page', err);
+                window.location.assign(url);
+            }
+        });
+    }
 
-    $(document).on('click', 'a', function () {       
-		var url = $(this).attr('href');
+    function successDownloadPage(data) {
+        setTimeout(function () {
+            $(document).scrollTop(0);
+            $(MainContentSelector).empty();
+            $(MainContentSelector).append(data);
+            $(MainContentSelector).fadeTo('fast', 1);
+        }, 200);
+    }
 
-		if (url.indexOf('/') == 0) {
-			navigate(url, false);
 
-			return false;
-		}
+    onpopstate = function (event) {
+        loadPage(event.state);
+    }
+
+    $(document).on('click', 'a', function () {
+        var url = $(this).attr('href');
+
+        if (url.indexOf('/') == 0) {
+            navigate(url, false);
+
+            return false;
+        }
     });
 
     function createWaitingPopup() {
-        var $popupHtml = $("<div class='requestWaitingMsg' id='popup-modal'></div>");
+        var $popupHtml = $('<div id="LoadingPanelModal"></div>');
 
         $popupHtml.css({
             position: "fixed",
-            "font-family": "Arial, Helvetica, sans-serif",
             top: 0,
             right: 0,
             bottom: 0,
             left: 0,
             background: "rgba(255,255,255,0.8)",
-            "z-index": 10000,
+            zIndex: 10000,
             opacity: 0,
-            "pointer-events": "none"
+            display: 'none'
+            //"pointer-events": "none"
         });
 
-        $popupHtml.append('<div id="msg-content">').find('div#msg-content').
-            css({
-                width: "400px",
-                position: "relative",
-                margin: "10% auto"
-            }).
-            text(waitingText);
+        var loaderImg = $('<img src="/Scripts/loader.gif" alt="" />').css({
+            position: 'absolute',
+            left: '50%',
+            top: '50%'
+        });
+
+        $popupHtml.append(loaderImg);
 
         return $popupHtml;
     };
 
     function showWaitingPopup() {
-        $popup.css({
-            opacity: 1,
-            display: "block"
-        });
+        $popup.fadeTo(200, 1)
     };
 
     function setPopupText(msg) {
-        $popup.children('div').text(msg);        
+        $popup.children('div').text(msg);
     };
 
     function hideWaitingPopup() {
@@ -146,8 +145,7 @@
             display: "none"
         });
 
-        setPopupText(waitingText);        
     };
 
-	return navigate;
+    return navigate;
 })();
